@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/smart-scan', [App\Http\Controllers\SmartScanController::class, 'index'])->name('smart-scan.index');
     Route::post('/smart-scan/receipt', [App\Http\Controllers\SmartScanController::class, 'uploadReceipt'])->name('smart-scan.upload');
     Route::post('/pantry/{pantryItem}/scan-expiry', [App\Http\Controllers\SmartScanController::class, 'updateItemExpiry'])->name('pantry.scan-expiry');
+    Route::post('/smart-scan/ripeness', [App\Http\Controllers\SmartScanController::class, 'checkRipeness'])->name('smart-scan.ripeness');
 
     // AI Recipe Suggestion
     Route::get('/recipe-suggestion', [App\Http\Controllers\RecipeSuggestionController::class, 'suggest'])->name('recipe.suggestion');

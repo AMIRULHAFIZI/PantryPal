@@ -228,4 +228,82 @@ class SmartScanController extends Controller
         Log::error('Gemini API Error: ' . $response->body());
         return back()->with('error', 'Failed to communicate with Gemini AI. Please try again or add manually from the Dashboard.');
     }
+
+    public function checkRipeness(Request $request)
+    {
+        set_time_limit(120);
+        ini_set('memory_limit', '256M');
+
+        $request->validate([
+            'ripeness_image' => 'required|mimes:jpeg,jpg,png,gif,bmp,webp,heic,heif|max:10240',
+        ]);
+
+        $imagePath = $request->file('ripeness_image')->store('ripeness_scans', 'public');
+        $imageContents = file_get_contents(storage_path('app/public/' . $imagePath));
+        $base64Image = base64_encode($imageContents);
+        $mimeType = $request->file('ripeness_image')->getMimeType();
+
+        $apiKey = env('GEMINI_API_KEY');
+        if (!$apiKey) {
+            return response()->json(['error' => 'Gemini API Key is missing.'], 500);
+        }
+
+        $prompt = 'You are a produce expert AI. Analyze this image of a fruit or vegetable and assess its ripeness. Return ONLY a valid JSON object in this exact format:
+{
+  "item_name": "Banana",
+  "ripeness_level": "Ripe",
+  "ripeness_score": 75,
+  "color_description": "Yellow with a few brown spots",
+  "shelf_life_days": 3,
+  "recommendation": "Best eaten now or within 1-2 days. Great for smoothies if over-ripe.",
+  "storage_tip": "Store at room temperature away from other fruits to slow further ripening.",
+  "is_produce": true
+}
+Rules:
+- "ripeness_level" must be one of: "Unripe", "Nearly Ripe", "Ripe", "Overripe", "Spoiled"
+- "ripeness_score" is 0-100 where 0=unripe, 50=ripe, 100=spoiled
+- "shelf_life_days" is your best estimate of days remaining before it should be consumed (0 if spoiled)
+- "is_produce" must be false if the image does not show a fruit or vegetable
+- If not a fruit/vegetable, set item_name to what you see and all other fields to null except is_produce: false';
+
+        $response = Http::timeout(120)->withoutVerifying()->withHeaders([
+            'Content-Type' => 'application/json',
+        ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={$apiKey}", [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => $prompt],
+                        [
+                            'inline_data' => [
+                                'mime_type' => $mimeType,
+                                'data'      => $base64Image,
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        if ($response->successful()) {
+            $responseData = $response->json();
+            $textOutput = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? '';
+            $textOutput = trim($textOutput);
+            if (str_starts_with($textOutput, '```json')) {
+                $textOutput = str_replace(['```json', '```'], '', $textOutput);
+                $textOutput = trim($textOutput);
+            }
+
+            $data = json_decode($textOutput, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+                return response()->json(['success' => true, 'result' => $data]);
+            }
+
+            Log::error('Ripeness API JSON Parse Error: ' . $textOutput);
+            return response()->json(['error' => 'Could not parse ripeness data. Please try again.'], 422);
+        }
+
+        Log::error('Gemini Ripeness API Error: ' . $response->body());
+        return response()->json(['error' => 'Failed to communicate with AI. Please try again.'], 500);
+    }
 }
