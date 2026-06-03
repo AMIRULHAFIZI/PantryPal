@@ -47,7 +47,7 @@ jobs:
         working-directory: ./laravel
         run: |
           npm install
-          npm run build
+          npm run build -- --manifest
 
       - name: Copy environment file
         working-directory: ./laravel
