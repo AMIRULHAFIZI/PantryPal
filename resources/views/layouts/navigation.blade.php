@@ -61,8 +61,6 @@
                     </x-slot>
                 </x-dropdown>
             </div>
-
-            <!-- Hamburger (Removed for Mobile UI enhancement) -->
         </div>
     </div>
 

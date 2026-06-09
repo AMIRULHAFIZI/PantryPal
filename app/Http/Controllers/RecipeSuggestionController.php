@@ -20,8 +20,6 @@ class RecipeSuggestionController extends Controller
         $userId = $user->id;
         $cacheKey = "recipe_suggestion_user_{$userId}";
 
-        // If we already generated a suggestion recently, return it 
-        // to save Gemini API credits and reduce load time.
         if (Cache::has($cacheKey)) {
             return response()->json(Cache::get($cacheKey));
         }
@@ -33,15 +31,13 @@ class RecipeSuggestionController extends Controller
 
         $today = now()->startOfDay();
         
-        $expiringSoon = [];   // Items expiring within 7 days (not yet expired) — matches dashboard card
-        $otherItems = [];     // Items that are still good and expire later
-        $expiredCount = 0;    // Track expired count to show a warning if needed
-        // Expired items are intentionally excluded from the recipe itself
+        $expiringSoon = [];
+        $otherItems = [];
+        $expiredCount = 0;
 
         foreach ($items as $item) {
             try {
                 if (!$item->expiry_date) {
-                    // No expiry date — treat as a safe pantry item
                     $qty = rtrim(rtrim(number_format((float)$item->quantity, 3), '0'), '.');
                     $unit = $item->unit ?? 'pcs';
                     $otherItems[] = "{$item->item_name} ({$qty} {$unit})";
@@ -51,7 +47,6 @@ class RecipeSuggestionController extends Controller
                 $expiry = Carbon::parse($item->expiry_date)->startOfDay();
 
                 if ($expiry->isBefore($today)) {
-                    // Already expired — count it but do NOT include in recipe lists
                     $expiredCount++;
                     continue;
                 }
@@ -63,19 +58,15 @@ class RecipeSuggestionController extends Controller
                 $daysUntilExpiry = $today->diffInDays($expiry, false);
 
                 if ($daysUntilExpiry <= 7) {
-                    // Expires within 7 days — prioritize in recipe
                     $expiringSoon[] = $label;
                 } else {
-                    // Expires later — still usable as supporting ingredient
                     $otherItems[] = $label;
                 }
             } catch (\Exception $e) {}
         }
 
-        // If nothing is expiring soon, check if we should still show a banner
         if (empty($expiringSoon)) {
             if ($expiredCount > 0) {
-                // There are expired items but nothing currently expiring — warn the user
                 $data = [
                     'has_recipe'   => false,
                     'no_expiring_items' => false,
@@ -84,7 +75,6 @@ class RecipeSuggestionController extends Controller
                 Cache::put($cacheKey, $data, now()->addHours(1));
                 return response()->json($data);
             }
-            // No expired and nothing expiring — hide the banner entirely
             $data = ['has_recipe' => false, 'no_expiring_items' => true];
             Cache::put($cacheKey, $data, now()->addHours(6));
             return response()->json($data);
@@ -142,8 +132,6 @@ class RecipeSuggestionController extends Controller
 
             $jsonData = json_decode($textOutput, true);
             if (json_last_error() === JSON_ERROR_NONE) {
-                // Cache the AI suggestion for 6 hours
-                // So reloading the page doesn't spam Gemini
                 Cache::put($cacheKey, $jsonData, now()->addHours(6));
                 return response()->json($jsonData);
             }

@@ -14,7 +14,6 @@ class PantryWebController extends Controller
         
         $totalItems = $items->count();
         $outOfStock = $items->where('quantity', '<=', 0)->count();
-        // Mirror the exact same logic used in the table row badges
         $today = now()->startOfDay();
         $expired = $items->filter(function($item) use ($today) {
             if (!$item->expiry_date) return false;
@@ -27,8 +26,6 @@ class PantryWebController extends Controller
             if (!$item->expiry_date) return false;
             try {
                 $expiry = Carbon::parse($item->expiry_date)->startOfDay();
-                // Not yet expired, but expiring within 7 days
-                // Use $today->diffInDays($expiry) so future dates are positive
                 return !$expiry->isBefore($today) && $today->diffInDays($expiry) <= 7;
             } catch (\Exception $e) { return false; }
         })->count();

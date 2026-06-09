@@ -22,7 +22,6 @@ class SmartScanController extends Controller
 
     public function uploadReceipt(Request $request)
     {
-        // Increase memory and time limits for heavy AI processing
         set_time_limit(120);
         ini_set('memory_limit', '256M');
 
@@ -42,7 +41,6 @@ class SmartScanController extends Controller
             return back()->with('error', 'Gemini API Key is missing. Please configure it in .env.');
         }
 
-        // Call Gemini API
         $prompt = 'You are an AI grocery assistant. Analyze this receipt image and extract each line item into JSON. CRITICAL RULES: (1) The "item_name" field must contain ONLY the clean product name — never include quantities, counts, weights, or units like "(4pc)", "4x", "2pcs" in the name. (2) Put the numeric quantity in the "quantity" field. (3) For quantity: use the numeric amount on the receipt (e.g. 0.848 for weight-sold items, 4 if the receipt shows 4 pieces). (4) For unit pick from: "pcs", "kg", "g", "L", "ml", "pack", "box", "bottle", "can", "bag". (5) Count total distinct line items. Return ONLY a valid JSON object exactly like: {"total_receipt_items": 12, "items": [{"item_name": "Cheezy Samosa", "quantity": 4, "unit": "pcs", "category": "Snacks"}]}';
         
         $response = Http::timeout(120)->withoutVerifying()->withHeaders([
@@ -67,7 +65,6 @@ class SmartScanController extends Controller
             $responseData = $response->json();
             $textOutput = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? '';
             
-            // Try to extract JSON from the output
             $textOutput = trim($textOutput);
             if (str_starts_with($textOutput, '```json')) {
                 $textOutput = str_replace(['```json', '```'], '', $textOutput);
@@ -85,11 +82,8 @@ class SmartScanController extends Controller
                     $itemName = $item['item_name'] ?? 'Unknown Item';
                     $quantity  = (float)($item['quantity'] ?? 1);
 
-                    // Post-process: strip leading quantity patterns like "(4pc)", "4x", "2pcs " from item names
-                    // and fold them into the quantity field.
                     if (preg_match('/^\(?\s*(\d+(?:\.\d+)?)\s*(?:pc|pcs|x|kg|g|L|ml|pack|box|bottle|can|bag)?\s*\)?\s*/i', $itemName, $matches)) {
                         $embeddedQty = (float)$matches[1];
-                        // Only apply if it looks like a count prefix (not a product code)
                         if ($embeddedQty > 0 && $embeddedQty <= 100) {
                             $quantity  = $embeddedQty;
                             $itemName  = trim(preg_replace('/^\(?\s*\d+(?:\.\d+)?\s*(?:pc|pcs|x|kg|g|L|ml|pack|box|bottle|can|bag)?\s*\)?\s*/i', '', $itemName));
@@ -117,7 +111,6 @@ class SmartScanController extends Controller
                 return back()->with('success', "Successfully extracted and added {$addedItemsCount} item(s) to your pantry!")
                              ->with('currentPercentage', $currentPercentage);
             } else {
-                // Fallback attempt for arrays
                 $items = is_array($data) ? $data : [];
                 if (count($items) > 0 && isset($items[0]['item_name'])) {
                     $addedItemsCount = 0;
@@ -156,12 +149,11 @@ class SmartScanController extends Controller
     {
         if ($pantryItem->user_id !== auth()->id()) abort(403);
 
-        // Increase memory and time limits for heavy AI processing
         set_time_limit(120);
         ini_set('memory_limit', '256M');
 
         $request->validate([
-            'expiry_image' => 'required|image|max:10240', // Max 10MB
+            'expiry_image' => 'required|image|max:10240',
         ]);
 
         $imagePath = $request->file('expiry_image')->store('expiry_scans', 'public');
@@ -174,7 +166,6 @@ class SmartScanController extends Controller
             return back()->with('error', 'Gemini API Key is missing. Please configure it in .env.');
         }
 
-        // Call Gemini API
         $prompt = 'Analyze this image of a product label or barcode. Find its expiration date. Return ONLY a JSON object exactly in this format: {"expiry_date": "YYYY-MM-DD"}. If you cannot find an expiration date clearly, return null for the date value.';
         
         $response = Http::timeout(120)->withoutVerifying()->withHeaders([
@@ -199,7 +190,6 @@ class SmartScanController extends Controller
             $responseData = $response->json();
             $textOutput = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? '';
             
-            // Try to extract JSON from the output
             $textOutput = trim($textOutput);
             if (str_starts_with($textOutput, '```json')) {
                 $textOutput = str_replace(['```json', '```'], '', $textOutput);

@@ -31,7 +31,6 @@ class AdminController extends Controller
 
     public function toggleRole(User $user)
     {
-        // Prevent admin from demoting themselves
         if ($user->id === auth()->id()) {
             return redirect()->route('admin.users')
                 ->with('error', 'You cannot change your own role.');
@@ -48,7 +47,6 @@ class AdminController extends Controller
 
     public function deleteUser(User $user)
     {
-        // Prevent admin from deleting themselves
         if ($user->id === auth()->id()) {
             return redirect()->route('admin.users')
                 ->with('error', 'You cannot delete your own account here.');
@@ -61,7 +59,6 @@ class AdminController extends Controller
             ->with('success', "User \"{$name}\" and all their data have been deleted.");
     }
 
-    // ─── Broadcast Methods ──────────────────────────────────────────────────────
 
     public function broadcasts()
     {
@@ -104,7 +101,6 @@ class AdminController extends Controller
 
     public function deleteBroadcast(AdminBroadcast $broadcast)
     {
-        // Delete associated image if it exists
         if ($broadcast->image_path) {
             Storage::disk('public')->delete($broadcast->image_path);
         }

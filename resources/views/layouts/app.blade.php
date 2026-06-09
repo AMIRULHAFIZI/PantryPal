@@ -107,11 +107,10 @@
             }
             #broadcast-close-btn:hover { background: rgba(239,68,68,0.2); color: #f87171; }
 
-            /* ── Floating Tab ─────────────────────────────────────────────── */
+            /* Floating Tab */
             #broadcast-tab {
                 position: fixed;
                 right: 0; top: 50%;
-                /* Peek out 52px so the icon + label is clearly visible */
                 transform: translateY(-50%) translateX(calc(100% - 52px));
                 background: linear-gradient(135deg, #c2410c, #ea580c, #f97316);
                 color: white;
