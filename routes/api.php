@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\PantryController; // <--- Add this line!
+use App\Http\Controllers\Api\PantryController; 
 
 Route::get('/items', [PantryController::class, 'index']);
 Route::post('/items', [PantryController::class, 'store']);

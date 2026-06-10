@@ -19,6 +19,9 @@
                         <x-nav-link :href="route('smart-scan.index')" :active="request()->routeIs('smart-scan.*')">
                             {{ __('Smart Scan') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('faq.index')" :active="request()->routeIs('faq.*')">
+                            {{ __('FAQ') }}
+                        </x-nav-link>
                     @endif
                     @if(Auth::user()->isAdmin())
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
@@ -86,6 +89,14 @@
             </svg>
         </div>
         <span class="text-[10px] font-semibold tracking-wide mt-1 {{ request()->routeIs('smart-scan.*') ? 'text-emerald-400' : 'text-slate-500' }}">Scan</span>
+    </a>
+
+    <!-- FAQ -->
+    <a href="{{ route('faq.index') }}" class="flex flex-col items-center justify-center w-16 transition-colors duration-200 {{ request()->routeIs('faq.*') ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300' }}">
+        <svg class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-[10px] font-semibold tracking-wide">FAQ</span>
     </a>
     @endif
 

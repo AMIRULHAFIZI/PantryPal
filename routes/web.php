@@ -20,6 +20,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/smart-scan/ripeness', [App\Http\Controllers\SmartScanController::class, 'checkRipeness'])->name('smart-scan.ripeness');
 
     Route::get('/recipe-suggestion', [App\Http\Controllers\RecipeSuggestionController::class, 'suggest'])->name('recipe.suggestion');
+
+    Route::middleware('non_admin')->group(function () {
+        Route::get('/faq', [App\Http\Controllers\FaqController::class, 'index'])->name('faq.index');
+        Route::post('/faq/chat', [App\Http\Controllers\FaqController::class, 'chat'])->name('faq.chat');
+    });
 });
 
 Route::middleware('auth')->group(function () {
