@@ -18,9 +18,12 @@
                 <h1 class="text-3xl font-bold text-emerald-400">
                     Welcome to PantryPal, {{ Auth::user()->name }}! ✨
                 </h1>
-                <p class="text-slate-400 mt-2">Here is your current inventory summary.</p>
+                @if(!Auth::user()->isAdmin())
+                    <p class="text-slate-400 mt-2">Here is your current inventory summary.</p>
+                @endif
             </div>
 
+            @if(!Auth::user()->isAdmin())
             <!-- AI Recipe Suggestion Banner -->
             <div x-data="{ 
                 loading: false, 
@@ -369,6 +372,8 @@
                     </table>
                 </div>
             </div>
+        </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

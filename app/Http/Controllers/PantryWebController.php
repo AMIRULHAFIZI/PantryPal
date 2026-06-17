@@ -10,6 +10,10 @@ use Carbon\Carbon;
 class PantryWebController extends Controller
 {
     public function index() {
+        if (auth()->user()->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         $items = auth()->user()->pantryItems()->orderBy('expiry_date', 'asc')->get();
         
         $totalItems = $items->count();
