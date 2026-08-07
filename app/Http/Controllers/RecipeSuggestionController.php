@@ -85,6 +85,11 @@ class RecipeSuggestionController extends Controller
             return response()->json(['error' => 'Gemini API not configured'], 500);
         }
 
+        // Set cross-device scanning flag so other open windows can show the overlay
+        Cache::put('user_' . $userId . '_scanning', 'recipe', 180);
+
+        try {
+
         $expiringStr = implode(', ', $expiringSoon);
         $otherStr = empty($otherItems) ? 'None' : implode(', ', $otherItems);
 
@@ -108,9 +113,18 @@ class RecipeSuggestionController extends Controller
             . "\n  \"instructions\": [\"step 1\", \"step 2\"]"
             . "\n}";
 
-        $response = Http::timeout(60)->withoutVerifying()->withHeaders([
-            'Content-Type' => 'application/json',
-        ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={$apiKey}", [
+        $models = [
+            'gemini-2.5-flash-lite',
+            'gemini-flash-latest',
+            'gemini-flash-lite-latest',
+            'gemini-2.5-flash',
+            'gemini-2.0-flash-lite',
+            'gemini-2.0-flash',
+            'gemini-3.1-flash-lite',
+            'gemini-3-flash-preview',
+        ];
+
+        $payload = [
             'contents' => [
                 [
                     'parts' => [
@@ -118,9 +132,23 @@ class RecipeSuggestionController extends Controller
                     ]
                 ]
             ]
-        ]);
+        ];
 
-        if ($response->successful()) {
+        $response = null;
+        foreach ($models as $model) {
+            $response = Http::timeout(60)->withoutVerifying()->withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", $payload);
+            if ($response->successful()) break;
+            $status = $response->status();
+            Log::warning("Recipe suggestion model [{$model}] failed HTTP {$status}, trying next.");
+            // Brief pause before next attempt to avoid cascading rate-limit hits
+            if (in_array($status, [429, 503])) {
+                sleep(1);
+            }
+        }
+
+        if ($response && $response->successful()) {
             $responseData = $response->json();
             $textOutput = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? '';
             
@@ -137,8 +165,14 @@ class RecipeSuggestionController extends Controller
             }
             
             Log::error('Recipe AI JSON Parse Error: ' . $textOutput);
+        } else {
+            Log::error('Recipe AI — all models failed. Last status: ' . ($response ? $response->status() : 'no response'));
         }
 
         return response()->json(['has_recipe' => false, 'error' => 'Failed to fetch from AI']);
+
+        } finally {
+            Cache::forget('user_' . $userId . '_scanning');
+        }
     }
 }

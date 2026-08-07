@@ -18,8 +18,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/smart-scan/receipt', [App\Http\Controllers\SmartScanController::class, 'uploadReceipt'])->name('smart-scan.upload');
     Route::post('/pantry/{pantryItem}/scan-expiry', [App\Http\Controllers\SmartScanController::class, 'updateItemExpiry'])->name('pantry.scan-expiry');
     Route::post('/smart-scan/ripeness', [App\Http\Controllers\SmartScanController::class, 'checkRipeness'])->name('smart-scan.ripeness');
+    Route::delete('/smart-scan/ripeness/{ripenessScan}', [App\Http\Controllers\SmartScanController::class, 'destroyRipeness'])->name('smart-scan.ripeness.destroy');
 
     Route::get('/recipe-suggestion', [App\Http\Controllers\RecipeSuggestionController::class, 'suggest'])->name('recipe.suggestion');
+
+    // Cross-device scan status polling endpoint
+    Route::get('/scan-status', function () {
+        $status = \Illuminate\Support\Facades\Cache::get('user_' . auth()->id() . '_scanning');
+        return response()->json(['scanning' => $status]);
+    })->name('scan.status');
 
     Route::middleware('non_admin')->group(function () {
         Route::get('/faq', [App\Http\Controllers\FaqController::class, 'index'])->name('faq.index');

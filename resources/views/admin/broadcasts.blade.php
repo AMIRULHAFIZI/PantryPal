@@ -121,6 +121,25 @@
                         @enderror
                     </div>
 
+                    {{-- Expiry Date --}}
+                    <div>
+                        <label for="expires_at" class="block text-sm font-medium text-slate-300 mb-1.5">
+                            Expiry Date
+                            <span class="text-slate-500 font-normal">(optional — leave blank for no expiry)</span>
+                        </label>
+                        <input type="datetime-local" id="expires_at" name="expires_at"
+                               value="{{ old('expires_at') }}"
+                               min="{{ now()->format('Y-m-d\TH:i') }}"
+                               class="w-full bg-slate-700 border border-slate-600 text-white placeholder-slate-500
+                                      rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500/50
+                                      focus:border-orange-500 transition @error('expires_at') border-red-500 @enderror
+                                      [color-scheme:dark]">
+                        <p class="text-slate-500 text-xs mt-1.5">⏰ After this date & time, the message will automatically stop appearing to users.</p>
+                        @error('expires_at')
+                            <p class="text-red-400 text-xs mt-1.5">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     {{-- Active Toggle + Submit --}}
                     <div class="flex items-center justify-between pt-2">
                         <label class="flex items-center gap-3 cursor-pointer">
@@ -174,15 +193,31 @@
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-start justify-between gap-3 mb-1">
                                     <h3 class="text-white font-semibold truncate">{{ $broadcast->title }}</h3>
-                                    <span class="shrink-0 text-xs font-bold px-2.5 py-1 rounded-full
-                                        {{ $broadcast->is_active
-                                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                                            : 'bg-slate-700 text-slate-400 border border-slate-600' }}">
-                                        {{ $broadcast->is_active ? '● Active' : '○ Inactive' }}
-                                    </span>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        @if($broadcast->isExpired())
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/40">
+                                                ⏰ Expired
+                                            </span>
+                                        @endif
+                                        <span class="text-xs font-bold px-2.5 py-1 rounded-full
+                                            {{ $broadcast->is_active
+                                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                                : 'bg-slate-700 text-slate-400 border border-slate-600' }}">
+                                            {{ $broadcast->is_active ? '● Active' : '○ Inactive' }}
+                                        </span>
+                                    </div>
                                 </div>
                                 <p class="text-slate-400 text-sm line-clamp-2 mb-2">{{ $broadcast->message }}</p>
-                                <p class="text-slate-600 text-xs">{{ $broadcast->created_at->format('d M Y, g:i A') }}</p>
+                                <div class="flex items-center gap-4">
+                                    <p class="text-slate-600 text-xs">📅 Created: {{ $broadcast->created_at->format('d M Y, g:i A') }}</p>
+                                    @if($broadcast->expires_at)
+                                        <p class="text-xs {{ $broadcast->isExpired() ? 'text-red-400' : 'text-amber-500' }}">
+                                            ⏰ Expires: {{ $broadcast->expires_at->format('d M Y, g:i A') }}
+                                        </p>
+                                    @else
+                                        <p class="text-slate-600 text-xs">⏰ No expiry</p>
+                                    @endif
+                                </div>
                             </div>
                         </div>
 

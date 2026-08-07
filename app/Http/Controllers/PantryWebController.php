@@ -17,7 +17,6 @@ class PantryWebController extends Controller
         $items = auth()->user()->pantryItems()->orderBy('expiry_date', 'asc')->get();
         
         $totalItems = $items->count();
-        $outOfStock = $items->where('quantity', '<=', 0)->count();
         $today = now()->startOfDay();
         $expired = $items->filter(function($item) use ($today) {
             if (!$item->expiry_date) return false;
@@ -34,7 +33,7 @@ class PantryWebController extends Controller
             } catch (\Exception $e) { return false; }
         })->count();
 
-        return view('pantry_list', compact('items', 'totalItems', 'outOfStock', 'expiringSoon', 'expired'));
+        return view('pantry_list', compact('items', 'totalItems', 'expiringSoon', 'expired'));
     }
 
     public function store(Request $request) {

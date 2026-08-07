@@ -36,6 +36,8 @@
                     this.showPrompt = false;
                     this.loading = true;
                     this.errorMessage = '';
+                    document.getElementById('recipe-gen-overlay').classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
                     fetch('/recipe-suggestion?t=' + Date.now(), {
                         headers: { 
                             'X-Requested-With': 'XMLHttpRequest', 
@@ -51,6 +53,8 @@
                         })
                         .then(data => {
                             this.loading = false;
+                            document.getElementById('recipe-gen-overlay').classList.add('hidden');
+                            document.body.style.overflow = '';
                             if(data.no_expiring_items) {
                                 this.noItems = true;
                             } else if(data.error) {
@@ -61,7 +65,9 @@
                             }
                         })
                         .catch((err) => { 
-                            this.loading = false; 
+                            this.loading = false;
+                            document.getElementById('recipe-gen-overlay').classList.add('hidden');
+                            document.body.style.overflow = '';
                             this.errorMessage = 'Fetch failed: ' + err.message;
                         });
                 }
@@ -189,7 +195,7 @@
             @endif
 
             <!-- Overview Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-sm flex flex-col justify-center">
                     <h3 class="text-slate-400 font-medium mb-1">Total Items</h3>
                     <p class="text-3xl font-bold text-white">{{ $totalItems }}</p>
@@ -203,10 +209,6 @@
                     <h3 class="text-slate-400 font-medium mb-1">Expired</h3>
                     <p class="text-3xl font-bold text-red-500">{{ $expired }}</p>
                     <p class="text-xs text-slate-500 mt-1">Past expiry date</p>
-                </div>
-                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-sm flex flex-col justify-center">
-                    <h3 class="text-slate-400 font-medium mb-1">Out of Stock</h3>
-                    <p class="text-3xl font-bold text-red-500">{{ $outOfStock }}</p>
                 </div>
             </div>
 
@@ -292,7 +294,6 @@
                                 <th class="p-4">Category</th>
                                 <th class="p-4">Quantity</th>
                                 <th class="p-4">Expiry Date</th>
-                                <th class="p-4">Ripeness</th>
                                 <th class="p-4">Actions</th>
                             </tr>
                         </thead>
@@ -327,31 +328,21 @@
                                         <span class="text-slate-400 text-sm ml-1">{{ $item->unit ?? 'pcs' }}</span>
                                     </td>
                                     <td class="p-4 border-t border-slate-700">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex flex-col gap-1">
-                                                <span class="{{ $isExpired ? 'text-red-500 font-bold' : ($isExpiringSoon ? 'text-orange-400 font-bold' : ($item->expiry_date ? 'text-slate-300' : 'text-slate-500 italic')) }}">{{ $item->expiry_date ?? '-' }}</span>
-                                                @if($isExpired)
-                                                    <span class="inline-flex items-center gap-1 text-xs font-bold text-red-400 bg-red-500/20 border border-red-500/40 px-2 py-0.5 rounded-full w-fit">
-                                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-                                                        Expired
-                                                    </span>
-                                                @elseif($isExpiringSoon)
-                                                    <span class="inline-flex items-center gap-1 text-xs font-bold text-orange-400 bg-orange-500/20 border border-orange-500/40 px-2 py-0.5 rounded-full w-fit">
-                                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                                                        Expiring Soon
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            <form action="{{ route('pantry.scan-expiry', $item->id) }}" method="POST" enctype="multipart/form-data" class="inline" id="camera-form-{{ $item->id }}">
-                                                @csrf
-                                                <label class="cursor-pointer text-emerald-400 hover:text-emerald-300 ml-3 p-2 bg-slate-700 rounded-full inline-block transition-transform hover:scale-110" title="Snap Expiry Date">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                                    <input type="file" name="expiry_image" accept="image/*" capture="environment" class="hidden" onchange="document.getElementById('camera-form-{{ $item->id }}').submit()">
-                                                </label>
-                                            </form>
+                                        <div class="flex flex-col gap-1">
+                                            <span class="{{ $isExpired ? 'text-red-500 font-bold' : ($isExpiringSoon ? 'text-orange-400 font-bold' : ($item->expiry_date ? 'text-slate-300' : 'text-slate-500 italic')) }}">{{ $item->expiry_date ?? '-' }}</span>
+                                            @if($isExpired)
+                                                <span class="inline-flex items-center gap-1 text-xs font-bold text-red-400 bg-red-500/20 border border-red-500/40 px-2 py-0.5 rounded-full w-fit">
+                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                                                    Expired
+                                                </span>
+                                            @elseif($isExpiringSoon)
+                                                <span class="inline-flex items-center gap-1 text-xs font-bold text-orange-400 bg-orange-500/20 border border-orange-500/40 px-2 py-0.5 rounded-full w-fit">
+                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                                    Expiring Soon
+                                                </span>
+                                            @endif
                                         </div>
                                     </td>
-                                    <td class="p-4 text-slate-400">{{ $item->ripeness_info ?: '-' }}</td>
                                     <td class="p-4">
                                         <div class="flex gap-3 items-center">
                                             <a href="{{ route('pantry.edit', $item->id) }}" class="text-blue-400 hover:text-blue-300 font-semibold text-sm transition">Edit</a>
@@ -376,4 +367,60 @@
             @endif
         </div>
     </div>
+
+    {{-- ── Recipe Generation Processing Overlay ─────────────────────── --}}
+    <div id="recipe-gen-overlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center hidden" style="background: rgba(15, 23, 42, 0.93); backdrop-filter: blur(6px);">
+        <div class="bg-slate-800 border border-indigo-500/30 rounded-2xl p-10 flex flex-col items-center shadow-2xl max-w-sm w-full mx-4">
+            <div class="relative mb-6">
+                <svg class="animate-spin h-16 w-16 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                    <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-2xl">👨‍🍳</span>
+                </div>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Chef AI is Cooking…</h3>
+            <p class="text-slate-400 text-sm text-center leading-relaxed">Reviewing your soon-to-expire items and crafting the perfect recipe to reduce waste. This may take a moment!</p>
+            <div class="flex space-x-2 mt-6">
+                <span class="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0ms;"></span>
+                <span class="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 150ms;"></span>
+                <span class="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 300ms;"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // \u2500\u2500 Cross-device scan status polling \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+        // Polls every 2 seconds so this page (e.g. laptop) shows the recipe
+        // overlay when another device (e.g. phone) triggers recipe generation.
+        (function startScanPolling() {
+            let lastKnownStatus = null;
+
+            setInterval(async () => {
+                try {
+                    const res  = await fetch('/scan-status', {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'ngrok-skip-browser-warning': 'true' }
+                    });
+                    const data = await res.json();
+                    const status = data.scanning || null;
+
+                    if (status === lastKnownStatus) return; // no change
+                    lastKnownStatus = status;
+
+                    const overlay = document.getElementById('recipe-gen-overlay');
+                    if (!overlay) return;
+
+                    if (status === 'recipe') {
+                        overlay.classList.remove('hidden');
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        overlay.classList.add('hidden');
+                        document.body.style.overflow = '';
+                    }
+                } catch (e) { /* ignore network errors */ }
+            }, 2000);
+        })();
+    </script>
+
 </x-app-layout>

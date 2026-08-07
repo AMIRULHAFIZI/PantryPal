@@ -20,21 +20,50 @@
                 </div>
             @endif
 
-            <!-- Scan Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-sm flex flex-col justify-center">
-                    <h3 class="text-slate-400 font-medium mb-1">Current Scan Accuracy</h3>
-                    <p class="text-3xl font-bold text-emerald-400">
-                        {{ session('currentPercentage') !== null ? session('currentPercentage') . '%' : 'N/A' }}
-                    </p>
-                </div>
-                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-sm flex flex-col justify-center">
-                    <h3 class="text-slate-400 font-medium mb-1">Overall Accuracy Average</h3>
-                    <p class="text-3xl font-bold {{ isset($overallPercentage) && $overallPercentage > 0 ? 'text-white' : 'text-slate-500' }}">
-                        {{ isset($overallPercentage) && $overallPercentage > 0 ? $overallPercentage . '%' : 'N/A' }}
-                    </p>
+            {{-- Receipt Scanning Stats --}}
+            <div class="mb-3">
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2">
+                    <span>🧾</span> Receipt Scanning
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm flex flex-col justify-center">
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">Last Scan Accuracy</h3>
+                        <p class="text-3xl font-bold text-emerald-400">
+                            {{ isset($currentPercentage) && $currentPercentage !== null ? $currentPercentage . '%' : 'N/A' }}
+                        </p>
+                    </div>
+                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm flex flex-col justify-center">
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">Overall Accuracy</h3>
+                        <p class="text-3xl font-bold {{ isset($overallPercentage) && $overallPercentage > 0 ? 'text-white' : 'text-slate-500' }}">
+                            {{ isset($overallPercentage) && $overallPercentage > 0 ? $overallPercentage . '%' : 'N/A' }}
+                        </p>
+                    </div>
                 </div>
             </div>
+
+            {{-- Ripeness Scanning Stats --}}
+            <div class="mb-8">
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2">
+                    <span>🍎</span> Ripeness Scanning
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm flex flex-col justify-center">
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">Total Scans Done</h3>
+                        <p class="text-3xl font-bold text-emerald-400">{{ $totalRipenessScans ?? 0 }}</p>
+                    </div>
+                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm flex flex-col justify-center">
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">Succeeded</h3>
+                        <p class="text-3xl font-bold {{ ($totalRipenessScans ?? 0) > 0 ? 'text-white' : 'text-slate-500' }}">
+                            @if(($totalRipenessScans ?? 0) > 0)
+                                {{ $succeededRipenessScans }}/{{ $totalRipenessScans }}
+                            @else
+                                N/A
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            </div>
+
 
             <div class="bg-slate-800 overflow-hidden shadow-sm rounded-xl border border-slate-700">
                 <div class="p-8 text-white border-b border-slate-700">
@@ -119,27 +148,10 @@
 
             <!-- Future placeholders section -->
             <div class="mt-8">
-                <h3 class="text-lg font-bold text-white mb-4 px-1">Upcoming Features</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Expired Date Scan Placeholder -->
-                    <div class="bg-slate-800 overflow-hidden shadow-sm border border-slate-700 rounded-xl hover:shadow-md transition-shadow duration-200 relative group cursor-not-allowed">
-                        <div class="absolute inset-0 bg-slate-700/30 group-hover:bg-slate-700/50 transition duration-200"></div>
-                        <div class="p-6 relative z-10 flex">
-                            <div class="flex-shrink-0 bg-slate-700 rounded-xl p-4 border border-slate-600">
-                                <svg class="h-8 w-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <div class="ml-5">
-                                <h3 class="text-lg font-bold text-white mb-1">Scan Expiry Date</h3>
-                                <p class="text-sm text-slate-400 leading-relaxed">Head over to your Dashboard to scan and update specific expiry dates for your items!</p>
-                                <span class="inline-block mt-3 px-2 py-1 bg-slate-700 text-slate-300 border border-slate-600 text-xs font-semibold rounded uppercase tracking-wide">Moved to Dashboard</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="grid grid-cols-1 gap-6">
 
                     <!-- Ripeness Checker — ACTIVE -->
-                    <div class="bg-slate-800 overflow-hidden shadow-sm border border-emerald-500/30 rounded-xl md:col-span-2">
+                    <div class="bg-slate-800 overflow-hidden shadow-sm border border-emerald-500/30 rounded-xl">
                         <div class="p-6">
                             <div class="flex items-center mb-4">
                                 <div class="flex-shrink-0 bg-emerald-500/10 rounded-xl p-3 border border-emerald-500/30 mr-4">
@@ -180,10 +192,13 @@
                             </form>
 
                             <!-- Ripeness Result Card (hidden until result arrives) -->
-                            <div id="ripeness-result" class="hidden mt-6 bg-slate-900 border border-slate-700 rounded-xl p-5 space-y-4 animate-pulse-once">
-                                <div class="flex items-center justify-between flex-wrap gap-2">
-                                    <h4 id="result-name" class="text-xl font-bold text-white"></h4>
-                                    <span id="result-badge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide"></span>
+                            <div id="ripeness-result" class="hidden mt-6 bg-slate-900 border border-slate-700 rounded-xl p-5 space-y-4">
+                                <div class="flex items-start gap-4">
+                                    <img id="result-image" src="" alt="" class="hidden w-20 h-20 object-cover rounded-xl border border-slate-600 shrink-0">
+                                    <div class="flex-1 flex items-center justify-between flex-wrap gap-2">
+                                        <h4 id="result-name" class="text-xl font-bold text-white"></h4>
+                                        <span id="result-badge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide"></span>
+                                    </div>
                                 </div>
                                 <div>
                                     <div class="flex justify-between text-xs text-slate-400 mb-1">
@@ -215,6 +230,138 @@
 
                             <!-- Error message -->
                             <div id="ripeness-error" class="hidden mt-4 bg-red-500/10 border border-red-500/40 text-red-400 px-4 py-3 rounded-lg text-sm"></div>
+
+                            {{-- Ripeness Processing Overlay --}}
+                            <div id="ripeness-overlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center hidden" style="background: rgba(15, 23, 42, 0.93); backdrop-filter: blur(6px);">
+                                <div class="bg-slate-800 border border-emerald-500/30 rounded-2xl p-10 flex flex-col items-center shadow-2xl max-w-sm w-full mx-4">
+                                    <div class="relative mb-6">
+                                        <svg class="animate-spin h-16 w-16 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                                            <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                        </svg>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <svg class="h-7 w-7 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-white mb-2">Analysing Ripeness…</h3>
+                                    <p class="text-slate-400 text-sm text-center leading-relaxed">Our AI is examining your fruit or vegetable photo. This may take up to 30 seconds — please don't close this page.</p>
+                                    <div class="flex space-x-2 mt-6">
+                                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style="animation-delay: 0ms;"></span>
+                                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style="animation-delay: 150ms;"></span>
+                                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style="animation-delay: 300ms;"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ripeness History -->
+                            @if(isset($ripenessHistory) && $ripenessHistory->isNotEmpty())
+                            <div class="mt-6 border-t border-slate-700 pt-6">
+                                <h4 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Recent Ripeness Scans</h4>
+                                <div class="space-y-3" id="ripeness-history-list">
+                                    @foreach($ripenessHistory as $scan)
+                                    @php
+                                        $lvlColors = [
+                                            'Unripe'      => 'bg-blue-500/20 text-blue-300 border border-blue-500/40',
+                                            'Nearly Ripe' => 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40',
+                                            'Ripe'        => 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40',
+                                            'Overripe'    => 'bg-orange-500/20 text-orange-300 border border-orange-500/40',
+                                            'Spoiled'     => 'bg-red-500/20 text-red-300 border border-red-500/40',
+                                        ];
+                                        $badge = $lvlColors[$scan->ripeness_level] ?? $lvlColors['Ripe'];
+                                        $shelf = $scan->shelf_life_days === 0 ? 'Should not be consumed'
+                                               : ($scan->shelf_life_days === 1 ? '~1 day'
+                                               : ($scan->shelf_life_days ? '~'.$scan->shelf_life_days.' days' : 'Unknown'));
+                                    @endphp
+                                    <div class="flex items-start gap-4 bg-slate-800 border border-slate-700 rounded-xl p-4">
+                                        <img src="{{ asset('storage/' . $scan->image_path) }}" alt="{{ $scan->item_name }}"
+                                             class="w-16 h-16 object-cover rounded-lg border border-slate-600 shrink-0">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center justify-between gap-2 mb-1">
+                                                <h5 class="font-bold text-white text-sm">{{ $scan->item_name }}</h5>
+                                                <span class="text-xs font-bold px-2 py-0.5 rounded-full {{ $badge }}">{{ $scan->ripeness_level }}</span>
+                                            </div>
+                                            @if($scan->recommendation)
+                                            <p class="text-xs text-slate-400 mb-2 line-clamp-2">{{ $scan->recommendation }}</p>
+                                            @endif
+                                            <div class="flex items-center justify-between gap-3 flex-wrap mt-1">
+                                                <div class="flex items-center gap-3 text-xs text-slate-500">
+                                                    <span>📦 {{ $shelf }}</span>
+                                                    <span>🕒 {{ $scan->created_at->diffForHumans() }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <button type="button" onclick="openRipenessModal(this)" class="ripeness-see-more text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors duration-150 underline underline-offset-2"
+                                                        data-name="{{ $scan->item_name }}"
+                                                        data-level="{{ $scan->ripeness_level }}"
+                                                        data-badge="{{ $badge }}"
+                                                        data-image="{{ asset('storage/' . $scan->image_path) }}"
+                                                        data-appearance="{{ $scan->color_description ?? '—' }}"
+                                                        data-shelf="{{ $shelf }}"
+                                                        data-recommendation="{{ $scan->recommendation ?? '—' }}"
+                                                        data-storage="{{ $scan->storage_tip ?? '—' }}"
+                                                    >See More</button>
+                                                    <form action="{{ route('smart-scan.ripeness.destroy', $scan) }}" method="POST" onsubmit="return confirm('Delete this ripeness scan?')" class="inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="text-slate-500 hover:text-red-400 transition-colors duration-150" title="Delete scan">
+                                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @else
+                            <div class="mt-6 border-t border-slate-700 pt-6">
+                                <h4 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Recent Ripeness Scans</h4>
+                                <div class="space-y-3" id="ripeness-history-list"></div>
+                                <p class="text-slate-500 text-sm italic">No ripeness scans yet. Analyse a fruit or vegetable above to get started.</p>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ── Ripeness Detail Modal ──────────────────────────────── --}}
+            <div id="ripeness-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background: rgba(10,15,28,0.85); backdrop-filter: blur(6px);" onclick="if(event.target===this) closeRipenessModal()">
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-modal-in">
+                    {{-- Modal header --}}
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+                        <div class="flex items-center gap-3">
+                            <img id="modal-image" src="" alt="" class="w-12 h-12 object-cover rounded-xl border border-slate-600">
+                            <div>
+                                <h3 id="modal-name" class="text-lg font-bold text-white leading-tight"></h3>
+                                <span id="modal-badge" class="text-xs font-bold px-2 py-0.5 rounded-full"></span>
+                            </div>
+                        </div>
+                        <button onclick="closeRipenessModal()" class="text-slate-400 hover:text-white transition-colors duration-150 p-1 rounded-lg hover:bg-slate-700">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    {{-- Modal body --}}
+                    <div class="p-6 grid grid-cols-1 gap-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-slate-900 rounded-xl p-4 border border-slate-700">
+                                <p class="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-2">👁 Appearance</p>
+                                <p id="modal-appearance" class="text-white text-sm leading-relaxed"></p>
+                            </div>
+                            <div class="bg-slate-900 rounded-xl p-4 border border-slate-700">
+                                <p class="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-2">📦 Est. Shelf Life</p>
+                                <p id="modal-shelf" class="text-emerald-400 text-sm font-bold"></p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 rounded-xl p-4 border border-slate-700">
+                            <p class="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-2">💡 Recommendation</p>
+                            <p id="modal-recommendation" class="text-white text-sm leading-relaxed"></p>
+                        </div>
+                        <div class="bg-slate-900 rounded-xl p-4 border border-slate-700">
+                            <p class="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-2">🗄 Storage Tip</p>
+                            <p id="modal-storage" class="text-white text-sm leading-relaxed"></p>
                         </div>
                     </div>
                 </div>
@@ -269,6 +416,10 @@
                 return;
             }
 
+            // Show full-screen overlay
+            document.getElementById('ripeness-overlay').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
             // Button loading state
             document.getElementById('ripeness-btn-icon').classList.add('hidden');
             document.getElementById('ripeness-btn-spinner').classList.remove('hidden');
@@ -290,10 +441,14 @@
                     return;
                 }
 
-                renderRipenessResult(json.result);
+                renderRipenessResult(json.result, json.image_url);
             } catch (err) {
                 showRipenessError('Network error. Please check your connection and try again.');
             } finally {
+                // Hide full-screen overlay
+                document.getElementById('ripeness-overlay').classList.add('hidden');
+                document.body.style.overflow = '';
+
                 document.getElementById('ripeness-btn-icon').classList.remove('hidden');
                 document.getElementById('ripeness-btn-spinner').classList.add('hidden');
                 document.getElementById('ripeness-btn-text').textContent = 'Analyse Ripeness';
@@ -307,7 +462,7 @@
             el.classList.remove('hidden');
         }
 
-        function renderRipenessResult(r) {
+        function renderRipenessResult(r, imageUrl) {
             if (!r.is_produce) {
                 showRipenessError(`"${r.item_name}" doesn't appear to be a fruit or vegetable. Please upload a produce photo.`);
                 return;
@@ -334,6 +489,16 @@
                           r.shelf_life_days === 1 ? '~1 day' :
                           r.shelf_life_days  ? `~${r.shelf_life_days} days` : 'Unknown';
 
+            // Show saved image thumbnail in result card
+            const resultImg = document.getElementById('result-image');
+            if (imageUrl) {
+                resultImg.src = imageUrl;
+                resultImg.alt = r.item_name || 'Produce';
+                resultImg.classList.remove('hidden');
+            } else {
+                resultImg.classList.add('hidden');
+            }
+
             document.getElementById('result-name').textContent    = r.item_name || 'Unknown';
             document.getElementById('result-color').textContent   = r.color_description || '—';
             document.getElementById('result-shelf').textContent   = shelf;
@@ -346,10 +511,122 @@
 
             const bar = document.getElementById('result-bar');
             bar.style.background = barColors[level] || '#34d399';
-            // Animate bar from 0
             setTimeout(() => { bar.style.width = score + '%'; }, 50);
 
             document.getElementById('ripeness-result').classList.remove('hidden');
+
+            // Prepend new card to history list
+            const histList = document.getElementById('ripeness-history-list');
+            if (histList) {
+                const badgeCls = badgeColors[level] || badgeColors['Ripe'];
+                const card = document.createElement('div');
+                card.className = 'flex items-start gap-4 bg-slate-800 border border-slate-700 rounded-xl p-4';
+                card.innerHTML = `
+                    ${ imageUrl ? `<img src="${imageUrl}" alt="${r.item_name || ''}" class="w-16 h-16 object-cover rounded-lg border border-slate-600 shrink-0">` : '' }
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <h5 class="font-bold text-white text-sm">${r.item_name || 'Unknown'}</h5>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded-full ${badgeCls}">${level}</span>
+                        </div>
+                        ${ r.recommendation ? `<p class="text-xs text-slate-400 mb-2 line-clamp-2">${r.recommendation}</p>` : '' }
+                        <div class="flex items-center justify-between gap-3 flex-wrap mt-1">
+                            <div class="flex items-center gap-3 text-xs text-slate-500">
+                                <span>📦 ${shelf}</span>
+                                <span>🕒 just now</span>
+                            </div>
+                            <button type="button" onclick="openRipenessModal(this)" class="ripeness-see-more text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors duration-150 underline underline-offset-2"
+                                data-name="${r.item_name || 'Unknown'}"
+                                data-level="${level}"
+                                data-badge="${badgeCls}"
+                                data-image="${imageUrl || ''}"
+                                data-appearance="${r.color_description || '—'}"
+                                data-shelf="${shelf}"
+                                data-recommendation="${r.recommendation || '—'}"
+                                data-storage="${r.storage_tip || '—'}"
+                            >See More</button>
+                        </div>
+                    </div>`;
+                histList.prepend(card);
+
+                // Hide the "no scans yet" message if visible
+                const emptyMsg = histList.nextElementSibling;
+                if (emptyMsg && emptyMsg.tagName === 'P') emptyMsg.classList.add('hidden');
+            }
         }
+
+        // ── Ripeness Detail Modal ────────────────────────────────
+        function openRipenessModal(btn) {
+            document.getElementById('modal-name').textContent        = btn.dataset.name || '—';
+            document.getElementById('modal-appearance').textContent  = btn.dataset.appearance || '—';
+            document.getElementById('modal-shelf').textContent       = btn.dataset.shelf || '—';
+            document.getElementById('modal-recommendation').textContent = btn.dataset.recommendation || '—';
+            document.getElementById('modal-storage').textContent     = btn.dataset.storage || '—';
+
+            const badgeEl = document.getElementById('modal-badge');
+            badgeEl.textContent = btn.dataset.level || '';
+            badgeEl.className   = 'text-xs font-bold px-2 py-0.5 rounded-full ' + (btn.dataset.badge || '');
+
+            const imgEl = document.getElementById('modal-image');
+            if (btn.dataset.image) {
+                imgEl.src = btn.dataset.image;
+                imgEl.alt = btn.dataset.name || '';
+                imgEl.classList.remove('hidden');
+            } else {
+                imgEl.classList.add('hidden');
+            }
+
+            const modal = document.getElementById('ripeness-modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeRipenessModal() {
+            document.getElementById('ripeness-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeRipenessModal();
+        });
+        // ── Cross-device scan status polling ──────────────────────
+        // Polls every 2 seconds so this page (e.g. laptop) shows an overlay
+        // when another device (e.g. phone) triggers a scan.
+        (function startScanPolling() {
+            let lastKnownStatus = null;
+
+            setInterval(async () => {
+                try {
+                    const res  = await fetch('/scan-status', {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'ngrok-skip-browser-warning': 'true' }
+                    });
+                    const data = await res.json();
+                    const status = data.scanning || null;
+
+                    if (status === lastKnownStatus) return; // no change
+                    lastKnownStatus = status;
+
+                    // Hide all overlays first
+                    document.getElementById('processing-overlay').classList.add('hidden');
+                    document.getElementById('ripeness-overlay').classList.add('hidden');
+                    document.body.style.overflow = '';
+
+                    if (status === 'receipt') {
+                        document.getElementById('processing-overlay').classList.remove('hidden');
+                        document.body.style.overflow = 'hidden';
+                    } else if (status === 'ripeness') {
+                        document.getElementById('ripeness-overlay').classList.remove('hidden');
+                        document.body.style.overflow = 'hidden';
+                    }
+                } catch (e) { /* ignore network errors */ }
+            }, 2000);
+        })();
     </script>
+
+    <style>
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(0.95) translateY(8px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-modal-in { animation: modal-in 0.2s ease-out forwards; }
+    </style>
 </x-app-layout>

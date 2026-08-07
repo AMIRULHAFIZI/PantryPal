@@ -69,9 +69,10 @@ class AdminController extends Controller
     public function storeBroadcast(Request $request)
     {
         $request->validate([
-            'title'   => 'required|string|max:255',
-            'message' => 'required|string',
-            'image'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+            'title'      => 'required|string|max:255',
+            'message'    => 'required|string',
+            'image'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+            'expires_at' => 'nullable|date|after:now',
         ]);
 
         $imagePath = null;
@@ -84,6 +85,7 @@ class AdminController extends Controller
             'message'    => $request->message,
             'image_path' => $imagePath,
             'is_active'  => $request->boolean('is_active', true),
+            'expires_at' => $request->expires_at ?: null,
         ]);
 
         return redirect()->route('admin.broadcasts')

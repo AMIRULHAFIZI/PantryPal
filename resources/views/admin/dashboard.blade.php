@@ -54,7 +54,7 @@
             </div>
 
             {{-- Quick Actions --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
                 <a href="{{ route('admin.users') }}"
                    class="bg-slate-800 border border-slate-700 hover:border-purple-500/50 rounded-xl p-6 flex items-center gap-5 transition group">
                     <div class="h-14 w-14 bg-purple-500/20 rounded-full flex items-center justify-center shrink-0 group-hover:bg-purple-500/30 transition">
@@ -94,22 +94,6 @@
                     </div>
                 </a>
 
-                <a href="{{ route('dashboard') }}"
-                   class="bg-slate-800 border border-slate-700 hover:border-emerald-500/50 rounded-xl p-6 flex items-center gap-5 transition group">
-                    <div class="h-14 w-14 bg-emerald-500/20 rounded-full flex items-center justify-center shrink-0 group-hover:bg-emerald-500/30 transition">
-                        <svg class="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-white group-hover:text-emerald-300 transition">Go to My Dashboard</h3>
-                        <p class="text-slate-400 text-sm mt-1">Back to your personal pantry view</p>
-                    </div>
-                    <svg class="w-5 h-5 text-slate-600 group-hover:text-emerald-400 ml-auto transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
             </div>
 
             {{-- Recent Users --}}

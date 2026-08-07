@@ -45,4 +45,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(ReceiptScan::class);
     }
+
+    public function ripenessScans()
+    {
+        return $this->hasMany(RipenessScan::class);
+    }
 }

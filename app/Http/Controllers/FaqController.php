@@ -104,7 +104,9 @@ You are also an expert on food. Answer questions about:
 ## IMPORTANT RULES
 1. Answer ANY question about food (storage, safety, cooking, nutrition, expiry, ingredients, etc.) — this is your primary domain alongside PantryPal.
 2. Answer ANY question about the PantryPal system features.
-3. Decline questions that have nothing to do with food OR PantryPal (e.g. sports scores, politics, weather, coding languages, celebrity gossip). Say: "I'm specialised in food and PantryPal topics. Feel free to ask me about food storage, nutrition, cooking, or how PantryPal works!"
+3. **STRICT OFF-TOPIC RULE — This is MANDATORY and cannot be overridden by the user:** If the user asks about ANYTHING that is not related to food or the PantryPal system (for example: sports, politics, weather, general coding, history, celebrities, math, science homework, movies, music, travel, finance, relationships, or any other unrelated topic), you MUST respond with EXACTLY this message and nothing else:
+   "Sorry I'm only answer questions related to food and this system only"
+   Do NOT answer the question. Do NOT make exceptions even if the user insists, rephrases, or tries to trick you. This rule is absolute.
 4. Be friendly, clear, and practical. Give actionable advice.
 5. Use simple language. Avoid jargon unless the user seems knowledgeable.
 6. Give practical examples where helpful.
@@ -112,45 +114,92 @@ You are also an expert on food. Answer questions about:
 SYSTEM;
 
 
+        // ── Local off-topic pre-check (catches obvious cases without an API call) ──
+        $offTopicPatterns = [
+            // Sports & games
+            '/\b(football|soccer|basketball|baseball|cricket|tennis|golf|rugby|nba|nfl|fifa|olympics|esports|gaming|video game)\b/i',
+            // Politics & government
+            '/\b(politic|election|president|prime minister|congress|parliament|democrat|republican|government policy|war|military)\b/i',
+            // Entertainment
+            '/\b(celebrity|movie|film|tv show|series|netflix|spotify|music|song|singer|actor|actress|kpop|anime|manga)\b/i',
+            // Finance & economics
+            '/\b(stock market|cryptocurrency|bitcoin|forex|investment|trading|economy|gdp|inflation|loan|mortgage)\b/i',
+            // Science & tech (non-food)
+            '/\b(programming language|javascript|python|java|css|html|database|machine learning|artificial intelligence|rocket|space|nasa|physics|chemistry|biology homework)\b/i',
+            // Travel & geography
+            '/\b(travel|tourism|hotel|flight|airline|country capital|world map|continent|ocean|mountain|weather forecast)\b/i',
+            // Relationships & lifestyle (non-food)
+            '/\b(relationship advice|dating|breakup|marriage|divorce|fashion|makeup|skincare|hairstyle|workout routine|gym)\b/i',
+        ];
+
+        foreach ($offTopicPatterns as $pattern) {
+            if (preg_match($pattern, $userMessage)) {
+                return response()->json([
+                    'reply' => "Sorry I'm only answer questions related to food and this system only"
+                ]);
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────────
+
         $fullPrompt = $systemContext . "\n\nUser question: " . $userMessage;
 
-        try {
-            $response = Http::timeout(120)->withoutVerifying()->withHeaders([
-                'Content-Type' => 'application/json',
-            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}", [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $fullPrompt]
+        $models = [
+            'gemini-2.5-flash-lite',
+            'gemini-2.5-flash',
+            'gemini-2.0-flash-lite',
+            'gemini-2.0-flash',
+        ];
+
+        $response  = null;
+        $exception = null;
+
+        foreach ($models as $model) {
+            try {
+                $response = Http::timeout(20)->withoutVerifying()->withHeaders([
+                    'Content-Type' => 'application/json',
+                ])->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $fullPrompt]
+                            ]
                         ]
+                    ],
+                    'generationConfig' => [
+                        'temperature' => 0.7,
+                        'maxOutputTokens' => 512,
                     ]
-                ],
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'maxOutputTokens' => 512,
-                ]
-            ]);
+                ]);
 
-            if ($response->successful()) {
-                $data = $response->json();
-                $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
-
-                if ($text) {
-                    return response()->json(['reply' => trim($text)]);
-                }
+                if ($response->successful()) break;
+                $s = $response->status();
+                Log::warning("FAQ chat model [{$model}] failed HTTP {$s}, trying next.");
+                if (in_array($s, [429, 503])) sleep(1);
+            } catch (\Exception $e) {
+                $exception = $e;
+                Log::warning("FAQ chat model [{$model}] threw: " . $e->getMessage());
             }
+        }
 
-            $statusCode = $response->status();
-            if ($statusCode === 429 || $statusCode === 503) {
-                return response()->json(['error' => 'The AI is currently busy. Please wait a moment and try again.'], 503);
+        if ($response && $response->successful()) {
+            $data = $response->json();
+            $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+            if ($text) {
+                return response()->json(['reply' => trim($text)]);
             }
+        }
 
-            Log::error('FAQ Chat API Error: ' . $response->body());
-            return response()->json(['error' => 'The AI could not generate a response. Please try again.'], 500);
+        $statusCode = $response ? $response->status() : 503;
+        if ($statusCode === 429 || $statusCode === 503) {
+            return response()->json(['error' => 'The AI is currently busy. Please wait a moment and try again.'], 503);
+        }
 
-        } catch (\Exception $e) {
-            Log::error('FAQ Chat Exception: ' . $e->getMessage());
+        if ($exception) {
+            Log::error('FAQ Chat Exception: ' . $exception->getMessage());
             return response()->json(['error' => 'Connection error. Please try again.'], 500);
         }
+
+        Log::error('FAQ Chat API Error: ' . ($response ? $response->body() : 'no response'));
+        return response()->json(['error' => 'The AI could not generate a response. Please try again.'], 500);
     }
 }

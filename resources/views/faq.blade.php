@@ -387,7 +387,7 @@
             const lower = msg.toLowerCase();
             for (const entry of LOCAL_FAQ) {
                 if (entry.keywords.some(kw => lower.includes(kw))) {
-                    return entry.answer + '\n\n_(Answered from built-in knowledge — AI is currently at capacity. Try again in a few minutes for a full AI response.)_';
+                    return entry.answer;
                 }
             }
             return "I can help with food and PantryPal questions! Unfortunately the AI is at capacity right now. Try again in a few minutes, or browse the FAQ cards above for quick answers. 📖";
@@ -465,6 +465,19 @@
             appendMessage('user', msg);
             showTyping();
 
+            // Front-end off-topic pre-check — catches cases where backend was rate-limited
+            // before it could run the off-topic regex itself
+            const offTopicFE = [
+                /\b(football|soccer|basketball|baseball|cricket|tennis|golf|rugby|nba|nfl|fifa|olympics|esports|gaming|video game|worldcup|world cup|epl|premier league|champion|champions league|f1|formula 1|formula one|mma|ufc|boxing|who will win|gonna win|going to win)\b/i,
+                /\b(politic|election|president|prime minister|congress|parliament|democrat|republican|war|military)\b/i,
+                /\b(celebrity|movie|film|tv show|series|netflix|spotify|music|song|singer|actor|actress|kpop|anime|manga)\b/i,
+                /\b(stock market|cryptocurrency|bitcoin|forex|investment|trading|economy|gdp|inflation|loan|mortgage)\b/i,
+                /\b(programming language|javascript|python|java|css|html|database|machine learning|rocket|space|nasa|physics|chemistry|biology homework)\b/i,
+                /\b(travel|tourism|hotel|flight|airline|country capital|world map|continent|ocean|mountain|weather forecast)\b/i,
+                /\b(relationship advice|dating|breakup|marriage|divorce|fashion|makeup|skincare|hairstyle|workout routine|gym)\b/i,
+            ];
+            const isOffTopic = offTopicFE.some(p => p.test(msg));
+
             try {
                 const res = await fetch(CHAT_URL, {
                     method: 'POST',
@@ -482,9 +495,13 @@
                 if (data.reply) {
                     appendMessage('ai', data.reply);
                 } else if (res.status === 429 || res.status === 503 || (data.error && data.error.toLowerCase().includes('busy'))) {
-                    // AI rate-limited — try local fallback
-                    const local = localAnswer(msg);
-                    appendMessage('ai', local || "The AI assistant is currently at capacity. Please try again in a few minutes, or browse the FAQ cards above for quick answers. 📖");
+                    // AI rate-limited — check if off-topic first
+                    if (isOffTopic) {
+                        appendMessage('ai', "Sorry I'm only answer questions related to food and this system only");
+                    } else {
+                        const local = localAnswer(msg);
+                        appendMessage('ai', local || "The AI assistant is currently at capacity. Please try again in a few minutes, or browse the FAQ cards above for quick answers. 📖");
+                    }
                 } else {
                     appendMessage('ai', data.error || 'Something went wrong. Please try again.');
                 }
