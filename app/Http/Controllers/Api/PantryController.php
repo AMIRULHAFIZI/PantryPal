@@ -11,9 +11,10 @@ class PantryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(PantryItem::all(), 200);
+        $items = PantryItem::where('user_id', $request->user()->id)->get();
+        return response()->json($items, 200);
     }
 
     /**

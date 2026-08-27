@@ -196,7 +196,7 @@
                                     <div class="flex items-center gap-2 shrink-0">
                                         @if($broadcast->isExpired())
                                             <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/40">
-                                                ⏰ Expired
+                                                ⏰ Ended
                                             </span>
                                         @endif
                                         <span class="text-xs font-bold px-2.5 py-1 rounded-full
@@ -212,7 +212,7 @@
                                     <p class="text-slate-600 text-xs">📅 Created: {{ $broadcast->created_at->format('d M Y, g:i A') }}</p>
                                     @if($broadcast->expires_at)
                                         <p class="text-xs {{ $broadcast->isExpired() ? 'text-red-400' : 'text-amber-500' }}">
-                                            ⏰ Expires: {{ $broadcast->expires_at->format('d M Y, g:i A') }}
+                                            ⏰ Deadline: {{ $broadcast->expires_at->format('d M Y, g:i A') }}
                                         </p>
                                     @else
                                         <p class="text-slate-600 text-xs">⏰ No expiry</p>

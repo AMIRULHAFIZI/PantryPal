@@ -30,11 +30,15 @@
                 hasIdea: false, 
                 noItems: false,
                 recipe: null,
+                activeTab: 0,
                 showPrompt: true,
                 errorMessage: '',
+                get recipes() { return (this.recipe && this.recipe.recipes) ? this.recipe.recipes : []; },
+                get activeRecipe() { return this.recipes[this.activeTab] || null; },
                 fetchIdea() {
                     this.showPrompt = false;
                     this.loading = true;
+                    this.activeTab = 0;
                     this.errorMessage = '';
                     document.getElementById('recipe-gen-overlay').classList.remove('hidden');
                     document.body.style.overflow = 'hidden';
@@ -117,65 +121,96 @@
                         </div>
                         <div class="flex-1 w-full">
                             <h3 class="text-indigo-300 font-bold text-xl mb-1 flex items-center flex-wrap gap-2">
-                                <span x-text="recipe && recipe.has_recipe ? 'Idea to Save Your Food!' : 'Expiring Soon Alert!'"></span>
+                                <span x-text="recipe && recipe.has_recipe ? 'Recipe Ideas to Save Your Food!' : 'Expiring Soon Alert!'"></span>
                                 <span class="bg-indigo-500/30 text-indigo-300 text-[10px] px-2 py-0.5 rounded-full font-bold border border-indigo-500/50 uppercase tracking-widest mt-1 md:mt-0">AI Suggested</span>
                             </h3>
-                            <p class="text-slate-300 mb-2 mt-2 leading-relaxed" x-text="recipe ? recipe.description : ''"></p>
-                            
-                            <template x-if="recipe && recipe.has_recipe">
-                                <div class="bg-slate-900/60 rounded-xl p-5 mt-4 border border-slate-700/50">
-                                    <h4 class="text-indigo-400 font-bold mb-4 flex items-center gap-2 text-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> <span x-text="recipe.title"></span></h4>
-                                    
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div class="col-span-1 border-b md:border-b-0 md:border-r border-slate-700/50 pb-4 md:pb-0 md:pr-4">
-                                            <h5 class="text-slate-400 text-xs font-bold mb-3 uppercase tracking-widest flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> Use These</h5>
-                                            <ul class="list-disc list-outside ml-4 text-sm text-slate-300 space-y-2">
-                                                <template x-for="ing in (recipe && recipe.ingredients_to_use ? recipe.ingredients_to_use : [])" :key="ing">
-                                                    <li x-text="ing" class="pl-1"></li>
-                                                </template>
-                                            </ul>
-                                        </div>
-                                        <div class="col-span-1 md:col-span-2">
-                                            <h5 class="text-slate-400 text-xs font-bold mb-3 uppercase tracking-widest flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg> Quick Steps</h5>
-                                            <ol class="list-decimal list-outside ml-4 text-sm text-slate-300 space-y-2">
-                                                <template x-for="step in (recipe && recipe.instructions ? recipe.instructions : [])" :key="step">
-                                                    <li x-text="step" class="pl-1"></li>
-                                                </template>
-                                            </ol>
-                                        </div>
+
+                            {{-- No-recipe fallback description --}}
+                            <p class="text-slate-300 mb-2 mt-2 leading-relaxed" x-show="recipe && !recipe.has_recipe" x-text="recipe ? recipe.description : ''"></p>
+
+                            <template x-if="recipe && recipe.has_recipe && recipes.length > 0">
+                                <div class="mt-4">
+                                    {{-- Tab buttons --}}
+                                    <div class="flex gap-2 mb-4 flex-wrap">
+                                        <template x-for="(r, i) in recipes" :key="i">
+                                            <button
+                                                type="button"
+                                                @click="activeTab = i"
+                                                :class="activeTab === i
+                                                    ? 'bg-indigo-500 text-white border-indigo-400 shadow-md'
+                                                    : 'bg-slate-800 text-indigo-300 border-slate-600 hover:bg-slate-700 hover:border-indigo-500/50'"
+                                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-bold transition-all duration-200"
+                                            >
+                                                <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                                                    :class="activeTab === i ? 'bg-white/20' : 'bg-slate-700'"
+                                                    x-text="i + 1"></span>
+                                                <span x-text="r.title" class="truncate max-w-[130px] sm:max-w-[200px]"></span>
+                                            </button>
+                                        </template>
                                     </div>
 
-                                    {{-- WhatsApp Share Button --}}
-                                    <div class="mt-5 flex justify-end">
-                                        <button
-                                            type="button"
-                                            id="whatsapp-share-btn"
-                                            @click="
-                                                if (!recipe) return;
-                                                let msg = '🍽️ *' + recipe.title + '*\n\n';
-                                                msg += recipe.description + '\n\n';
-                                                msg += '🛒 *Ingredients:*\n';
-                                                (recipe.ingredients_to_use || []).forEach(ing => { msg += '• ' + ing + '\n'; });
-                                                msg += '\n📋 *Steps:*\n';
-                                                (recipe.instructions || []).forEach((step, i) => { msg += (i + 1) + '. ' + step + '\n'; });
-                                                msg += '\n_(Generated by PantryPal AI 🤖)_';
-                                                window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
-                                            "
-                                            style="background:#25D366;"
-                                            onmouseover="this.style.background='#1ebe5d';this.style.transform='scale(1.05)';"
-                                            onmouseout="this.style.background='#25D366';this.style.transform='scale(1)';"
-                                            onmousedown="this.style.background='#17a84f';"
-                                            onmouseup="this.style.background='#1ebe5d';"
-                                            class="inline-flex items-center gap-2 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all duration-200 shadow-lg"
-                                        >
-                                            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                                            </svg>
-                                            Share via WhatsApp
-                                        </button>
-                                    </div>
+                                    {{-- Active recipe card --}}
+                                    <template x-if="activeRecipe">
+                                        <div class="bg-slate-900/60 rounded-xl p-5 border border-slate-700/50">
+                                            <div class="flex items-start gap-3 mb-4">
+                                                <svg class="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                                <div>
+                                                    <h4 class="text-indigo-400 font-bold text-lg leading-tight" x-text="activeRecipe.title"></h4>
+                                                    <p class="text-slate-400 text-sm mt-1 leading-relaxed" x-text="activeRecipe.description"></p>
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                <div class="col-span-1 border-b md:border-b-0 md:border-r border-slate-700/50 pb-4 md:pb-0 md:pr-4">
+                                                    <h5 class="text-slate-400 text-xs font-bold mb-3 uppercase tracking-widest flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> Use These</h5>
+                                                    <ul class="list-disc list-outside ml-4 text-sm text-slate-300 space-y-2">
+                                                        <template x-for="ing in (activeRecipe.ingredients_to_use || [])" :key="ing">
+                                                            <li x-text="ing" class="pl-1"></li>
+                                                        </template>
+                                                    </ul>
+                                                </div>
+                                                <div class="col-span-1 md:col-span-2">
+                                                    <h5 class="text-slate-400 text-xs font-bold mb-3 uppercase tracking-widest flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg> Quick Steps</h5>
+                                                    <ol class="list-decimal list-outside ml-4 text-sm text-slate-300 space-y-2">
+                                                        <template x-for="step in (activeRecipe.instructions || [])" :key="step">
+                                                            <li x-text="step" class="pl-1"></li>
+                                                        </template>
+                                                    </ol>
+                                                </div>
+                                            </div>
+
+                                            {{-- WhatsApp Share Button --}}
+                                            <div class="mt-5 flex justify-end">
+                                                <button
+                                                    type="button"
+                                                    id="whatsapp-share-btn"
+                                                    @click="
+                                                        if (!activeRecipe) return;
+                                                        let msg = '\u{1F37D}\uFE0F *' + activeRecipe.title + '*\n\n';
+                                                        msg += activeRecipe.description + '\n\n';
+                                                        msg += '\uD83D\uDED2 *Ingredients:*\n';
+                                                        (activeRecipe.ingredients_to_use || []).forEach(ing => { msg += '\u2022 ' + ing + '\n'; });
+                                                        msg += '\n\uD83D\uDCCB *Steps:*\n';
+                                                        (activeRecipe.instructions || []).forEach((step, i) => { msg += (i + 1) + '. ' + step + '\n'; });
+                                                        msg += '\n_(Generated by PantryPal AI \uD83E\uDD16)_';
+                                                        window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+                                                    "
+                                                    style="background:#25D366;"
+                                                    onmouseover="this.style.background='#1ebe5d';this.style.transform='scale(1.05)';"
+                                                    onmouseout="this.style.background='#25D366';this.style.transform='scale(1)';"
+                                                    onmousedown="this.style.background='#17a84f';"
+                                                    onmouseup="this.style.background='#1ebe5d';"
+                                                    class="inline-flex items-center gap-2 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all duration-200 shadow-lg"
+                                                >
+                                                    <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                                                    </svg>
+                                                    Share via WhatsApp
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
-
                             </template>
                         </div>
                     </div>
@@ -302,12 +337,15 @@
                                 @php
                                     $isExpired = false;
                                     $isExpiringSoon = false;
+                                    $daysUntilAutoDelete = null;
                                     if ($item->expiry_date) {
                                         try {
                                             $expiry = \Carbon\Carbon::parse($item->expiry_date)->startOfDay();
                                             $today = now()->startOfDay();
                                             if ($expiry->isBefore($today)) {
                                                 $isExpired = true;
+                                                $daysSinceExpiry = $expiry->diffInDays($today);
+                                                $daysUntilAutoDelete = max(0, 30 - (int) $daysSinceExpiry);
                                             } elseif ($today->diffInDays($expiry) <= 7) {
                                                 $isExpiringSoon = true;
                                             }
@@ -335,6 +373,11 @@
                                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
                                                     Expired
                                                 </span>
+                                                @if($daysUntilAutoDelete !== null)
+                                                    <span class="inline-flex items-center gap-1 text-[10px] text-red-400/70 mt-0.5">
+                                                        ⏳ Auto-deletes in {{ $daysUntilAutoDelete }} {{ $daysUntilAutoDelete === 1 ? 'day' : 'days' }}
+                                                    </span>
+                                                @endif
                                             @elseif($isExpiringSoon)
                                                 <span class="inline-flex items-center gap-1 text-xs font-bold text-orange-400 bg-orange-500/20 border border-orange-500/40 px-2 py-0.5 rounded-full w-fit">
                                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>

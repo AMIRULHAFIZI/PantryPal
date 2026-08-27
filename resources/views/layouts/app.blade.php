@@ -365,7 +365,7 @@
 
                             var expiresEl = document.getElementById('bc-expires');
                             if (b.expires_at) {
-                                expiresEl.textContent    = '⏰ Expires: ' + b.expires_at;
+                                expiresEl.textContent    = '⏰ Ended: ' + b.expires_at;
                                 expiresEl.style.display  = 'block';
                             } else {
                                 expiresEl.style.display  = 'none';
